@@ -66,7 +66,7 @@ function frictionFactor(Re, eps, D) {
 /* ================= App ================= */
 
 export default function App() {
-
+  const [showHelp, setShowHelp] = useState(false);
   const [sections, setSections] = useState([
     {
       flow_m3h: 500,
@@ -131,6 +131,10 @@ export default function App() {
       <h2 style={{ textAlign: "center" }}>
         Calculadora HVAC – Ramal Crítico
       </h2>
+      
+      <Button onClick={() => setShowHelp(!showHelp)}>
+        ? Metodologia de cálculo
+      </Button>
 
       {sections.map((s, i) => (
         <Card key={i}>
@@ -240,7 +244,71 @@ export default function App() {
           onChange={e => setSafetyPercent(+e.target.value)} />
         <p>Fator aplicado: × {results.safetyFactor.toFixed(2)}</p>
       </Card>
+      {showHelp && (
+        <Card>
+          <h3>Metodologia de Cálculo – Perdas de Carga HVAC</h3>
 
+          <p><b>Caudal</b></p>
+          <p>
+            O caudal é convertido de m³/h para m³/s:
+            <br />
+            Q = m³/h ÷ 3600
+          </p>
+
+          <p><b>Área da conduta circular</b></p>
+          <p>
+            A = π · D² / 4
+          </p>
+
+          <p><b>Velocidade do ar</b></p>
+          <p>
+            v = Q / A
+          </p>
+
+          <p><b>Número de Reynolds</b></p>
+          <p>
+            Re = (ρ · v · D) / μ
+          </p>
+
+          <p><b>Fator de atrito</b></p>
+          <p>
+            Calculado pela equação de Swamee–Jain:
+            <br />
+            f = 0,25 / [ log₁₀( ε / (3,7·D) + 5,74 / Re⁰·⁹ ) ]²
+          </p>
+
+          <p><b>Perda linear</b></p>
+          <p>
+            Δp<sub>lin</sub> = f · (L / D) · (ρ · v² / 2)
+          </p>
+
+          <p><b>Perda específica da conduta</b></p>
+          <p>
+            P = Δp<sub>lin</sub> / L &nbsp; (Pa/m)
+          </p>
+
+          <p><b>Perdas singulares</b></p>
+          <p>
+            Δp<sub>sing</sub> = ΣK · (ρ · v² / 2)
+          </p>
+
+          <p><b>Perda total do troço</b></p>
+          <p>
+            Δp = Δp<sub>lin</sub> + Δp<sub>sing</sub>
+          </p>
+
+          <p><b>Coeficiente de segurança</b></p>
+          <p>
+            Aplicado apenas ao resultado final:
+            <br />
+            Δp<sub>final</sub> = Δp<sub>calculada</sub> × (1 + Safety / 100)
+          </p>
+
+          <Button onClick={() => setShowHelp(false)}>
+            Fechar ajuda
+          </Button>
+        </Card>
+      )}
       <Card>
         <h3>Resultado final</h3>
         <p>Perda calculada: <b>{results.totalLoss.toFixed(1)} Pa</b></p>
