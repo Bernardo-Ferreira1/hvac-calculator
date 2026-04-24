@@ -65,7 +65,7 @@ function frictionFactor(Re, eps, D) {
 
 /* ================= App ================= */
 
-export default function App() {
+function CalculadoraPerdasCarga() {
   const [showHelp, setShowHelp] = useState(false);
   const [sections, setSections] = useState([
     {
@@ -314,6 +314,33 @@ export default function App() {
         <p>Perda calculada: <b>{results.totalLoss.toFixed(1)} Pa</b></p>
         <p>Perda com segurança: <b>{results.totalWithSafety.toFixed(1)} Pa</b></p>
       </Card>
+    </div>
+  );
+}
+export default function App() {
+  const [activeCalc, setActiveCalc] = useState(null);
+
+  return (
+    <div style={{ padding: 20, maxWidth: 900 }}>
+      {activeCalc === null && (
+        <Card>
+          <h1>Calculadoras AVAC</h1>
+
+          <Button onClick={() => setActiveCalc("perdas")}>
+            Perdas de carga lineares
+          </Button>
+        </Card>
+      )}
+
+      {activeCalc === "perdas" && (
+        <>
+          <Button onClick={() => setActiveCalc(null)}>
+            ⬅ Voltar às calculadoras
+          </Button>
+
+          <CalculadoraPerdasCarga />
+        </>
+      )}
     </div>
   );
 }
