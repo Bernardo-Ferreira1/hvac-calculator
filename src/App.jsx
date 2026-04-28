@@ -379,6 +379,7 @@ function CalculadoraPerdasCarga() {
             Δp<sub>final</sub> = Δp<sub>calculada</sub> × (1 + Safety / 100)
           </p>
 
+
           <Button onClick={() => setShowHelp(false)}>
             Fechar ajuda
           </Button>
