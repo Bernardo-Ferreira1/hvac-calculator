@@ -80,7 +80,7 @@ function CalculadoraPerdasCarga() {
       width: 0.4,
       height: 0.2,
 
-      length: 10,
+      length: "10",
       material: "galv",
       losses: []
     }
@@ -95,7 +95,9 @@ function CalculadoraPerdasCarga() {
     const detailed = sections.map((s) => {
       const Q = s.flow_m3h / 3600;
       const mat = MATERIALS.find(m => m.id === s.material);
-      
+      const rawLength = String(s.length).replace(",", ".");
+      const L = parseFloat(rawLength);
+      const length = isNaN(L) ? 0 : L;
       let area;
       let Dh;
 
@@ -118,10 +120,10 @@ function CalculadoraPerdasCarga() {
       const f = frictionFactor(Re, mat.eps, Dh);
 
       // Perda linear
-      const linearLoss =
-        f * (s.length / Dh) * (RHO * velocity ** 2 / 2);
+      const pressurePerMeter =
+        f * (1 / Dh) * (RHO * velocity ** 2 / 2);
         
-      const pressurePerMeter = linearLoss / s.length;
+      const linearLoss = pressurePerMeter * length;
 
       const Ktotal = s.losses.reduce(
         (sum, l) => sum + l.K * l.qty, 0
@@ -247,6 +249,16 @@ function CalculadoraPerdasCarga() {
               </option>
             ))}
           </select>
+          <Label>Comprimento do troço (m)</Label>
+          <Input
+            type="text"
+            value={s.length}
+            onChange={e => {
+              const n = [...sections];
+              n[i].length = +e.target.value;
+              setSections(n);
+            }}
+          />
           
           <Label>Acessórios</Label>
           {s.losses.map((l, j) => (
@@ -307,7 +319,7 @@ function CalculadoraPerdasCarga() {
           diameter: 0.2,
           width: 0.4,
           height: 0.2,
-          length: 10,
+          length: "10",
           material: "galv",
           losses: []
         }])
