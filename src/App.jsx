@@ -69,13 +69,23 @@ function CalculadoraPerdasCarga() {
   const [showHelp, setShowHelp] = useState(false);
   const [sections, setSections] = useState([
     {
+      shape: "circular",   // "circular" ou "rectangular"
+
       flow_m3h: 500,
+
+      // --- usado se circular ---
       diameter: 0.2,
+
+      // --- usados se rectangular ---
+      width: 0.4,
+      height: 0.2,
+
       length: 10,
       material: "galv",
       losses: []
     }
   ]);
+
 
   const [safetyPercent, setSafetyPercent] = useState(0);
 
@@ -84,16 +94,33 @@ function CalculadoraPerdasCarga() {
 
     const detailed = sections.map((s) => {
       const Q = s.flow_m3h / 3600;
-      const area = Math.PI * s.diameter ** 2 / 4;
-      const velocity = Q / area;
-      const Re = (RHO * velocity * s.diameter) / MU;
-
       const mat = MATERIALS.find(m => m.id === s.material);
-      const f = frictionFactor(Re, mat.eps, s.diameter);
+      
+      let area;
+      let Dh;
 
+      // Área e diâmetro hidráulico
+      if (s.shape === "circular") {
+        area = Math.PI * s.diameter ** 2 / 4;
+        Dh = s.diameter;
+      } else {
+        area = s.width * s.height;
+        Dh = (2 * s.width * s.height) / (s.width + s.height);
+      }
+
+      // Velocidade
+      const velocity = Q / area;
+
+      // Reynolds
+      const Re = (RHO * velocity * Dh) / MU;
+
+      // Fator de atrito
+      const f = frictionFactor(Re, mat.eps, Dh);
+
+      // Perda linear
       const linearLoss =
-        f * (s.length / s.diameter) * (RHO * velocity ** 2 / 2);
-
+        f * (s.length / Dh) * (RHO * velocity ** 2 / 2);
+        
       const pressurePerMeter = linearLoss / s.length;
 
       const Ktotal = s.losses.reduce(
@@ -147,35 +174,80 @@ function CalculadoraPerdasCarga() {
               n[i].flow_m3h = +e.target.value;
               setSections(n);
             }} />
-
-          <Label>Diâmetro (m)</Label>
-          <Input type="number" step="0.01" value={s.diameter}
+            
+          <Label>Tipo de conduta</Label>
+          <select
+            value={s.shape}
             onChange={e => {
               const n = [...sections];
-              n[i].diameter = +e.target.value;
+              n[i].shape = e.target.value;
               setSections(n);
-            }} />
+            }}
+          >
+            <option value="circular">Circular</option>
+            <option value="rectangular">Rectangular</option>
+          </select>
+    
+          {s.shape === "circular" && (
+            <>
+              <Label>Diâmetro (m)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={s.diameter}
+                onChange={e => {
+                  const n = [...sections];
+                  n[i].diameter = +e.target.value;
+                  setSections(n);
+                }}
+              />
+            </>
+          )}
 
-          <Label>Comprimento (m)</Label>
-          <Input type="number" value={s.length}
-            onChange={e => {
-              const n = [...sections];
-              n[i].length = +e.target.value;
-              setSections(n);
-            }} />
+          {s.shape === "rectangular" && (
+            <>
+              <Label>Largura (m)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={s.width}
+                onChange={e => {
+                  const n = [...sections];
+                  n[i].width = +e.target.value;
+                  setSections(n);
+                }}
+              />
 
+              <Label>Altura (m)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={s.height}
+                onChange={e => {
+                  const n = [...sections];
+                  n[i].height = +e.target.value;
+                  setSections(n);
+                }}
+              />
+            </>
+          )}
+          
           <Label>Material</Label>
-          <select value={s.material}
+          <select
+            value={s.material}
             onChange={e => {
               const n = [...sections];
               n[i].material = e.target.value;
               setSections(n);
-            }}>
+            }}
+          >
             {MATERIALS.map(m => (
-              <option key={m.id} value={m.id}>{m.name}</option>
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
             ))}
           </select>
-
+          
           <Label>Acessórios</Label>
           {s.losses.map((l, j) => (
             <div key={j}>
@@ -230,8 +302,11 @@ function CalculadoraPerdasCarga() {
 
       <Button onClick={() =>
         setSections([...sections, {
+          shape: "circular",
           flow_m3h: 500,
           diameter: 0.2,
+          width: 0.4,
+          height: 0.2,
           length: 10,
           material: "galv",
           losses: []
